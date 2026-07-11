@@ -1,0 +1,75 @@
+variables:
+  core_parameters:
+    target_value: 0.38080
+  PROBLEM_TYPE: "Erdos"
+  MAX_RUNTIME: 1000
+  score_transform:
+    score_range_min: 0.38080
+    score_range_max: 0.50
+    alpha: 3.0
+    optimize_mode: "minimize"
+    positive_multiplier: 5.0
+
+checkpoint_interval: 10
+max_code_length: 50000
+log_level: "INFO"
+
+llm:
+  models:
+    - name: "google/gemini-2.5-flash-lite"
+      weight: 0.8
+    - name: "google/gemini-2.5-pro"
+      weight: 0.2
+  api_base: "https://openrouter.ai/api/v1"
+  api_key: "EMPTY"
+  temperature: 0.7
+  top_p: 0.95
+  max_tokens: 16384
+  timeout: 600
+  retries: 3
+  retry_delay: 5
+
+prompt:
+  use_alphaevolve_style: true
+  use_system_prompt: false
+  use_system_message_sampling: true
+  system_message_list:
+    - message: |
+        You are optimizing the Erdős minimum-overlap problem.
+        Produce a list of values in [0,1] whose sum equals n/2 and minimizes
+        max(np.correlate(h, 1-h, mode="full") * dx). Lower is better; target is {core_parameters.target_value}.
+        Keep the program self-contained, save the current best solution, and improve the EVOLVE-BLOCK.
+      weight: 1.0
+  num_top_programs: 0
+  num_diverse_programs: 0
+  num_inspiration_programs: 0
+  use_template_stochasticity: true
+  include_artifacts: true
+  max_artifact_bytes: 16384
+  artifact_security_filter: true
+
+database:
+  population_size: 10000
+  archive_size: 1000
+  num_islands: 10
+  feature_dimensions:
+    - "score"
+    - "complexity"
+  elite_selection_ratio: 0.3
+  exploitation_ratio: 0.6
+  log_prompts: true
+
+evaluator:
+  timeout: 1040
+  max_retries: 3
+  cascade_evaluation: false
+  parallel_evaluations: 4
+  use_llm_feedback: false
+  enable_artifacts: true
+  collect_runtime_environments: true
+  preserve_temp_directories: false
+  runtime_environment_patterns:
+    - "*"
+
+diff_based_evolution: true
+allow_full_rewrites: false
